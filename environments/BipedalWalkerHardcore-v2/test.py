@@ -12,3 +12,18 @@ for _ in range(1000):
         env.reset()
 
 env.close()
+
+# Gradient test
+import mxnet as mx
+from mxnet import nd, autograd
+
+ctx = mx.cpu()
+x = nd.array([[1, 2], [3, 4]])
+x.attach_grad()  # Tell mxnet that we wish to store gradient information in the x NDArray
+with autograd.record():  # Tell mxnet to build gradient calculation graph for x. If we don't do this that part of the graph will not build
+    y = x * 2
+    z = y * x
+
+z.backward()  # Do the backpropagation
+
+print(x.grad)
