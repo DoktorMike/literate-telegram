@@ -27,3 +27,17 @@ with autograd.record():  # Tell mxnet to build gradient calculation graph for x.
 z.backward()  # Do the backpropagation
 
 print(x.grad)
+
+
+
+# Test
+import agent
+import gym
+import mxnet as mx
+from mxnet import nd, autograd as ag
+import numpy as np
+
+env = gym.make("BipedalWalkerHardcore-v2")
+observation = env.reset()
+p = agent.Policy()
+p.net(nd.array(observation))
