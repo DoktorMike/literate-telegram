@@ -6,19 +6,28 @@ class Agent:
     """An Agent operating in an environment."""
 
     def __init__(self, policy, env):
-        self.__policy = policy
-        self.__env = env
-        self.__rewards = None
-        self.__state = env.reset()
+        self.policy = policy
+        self.env = env
+        self.rewards = None
+        self.gradients = None
+        self.reward = 0
+        self.state = env.reset()
+        self.done = False
+    def print_status(self, episode, action):
+        print("EPISODE ", episode, " ######")
+        print("Action: ", action.asnumpy())
+        print("Reward: ", self.reward)
+        print("State:\n", self.state)
 
-    def state(self):
-        print("I'm in state: ", self.__state)
-
-    def act(self):
-        self.__policy.decide(self.__state)
-
-    def rollout(self):
-        pass
+    def play(self, episodes):
+        self.state = self.env.reset()
+        for episode in range(episodes):
+            self.env.render()
+            action = self.policy.decide(nd.array(self.state))
+            self.state, self.reward, self.done, info = self.env.step(action.asnumpy())
+            self.print_status(episode, action)
+            if self.done:
+                self.env.reset()
 
 
 class Policy:
@@ -63,4 +72,8 @@ class Policy:
         return 1 / (1 + nd.exp(-0.5 * X))
 
     def decide(self, s):
-        return net(s)
+        return self.net(s)
+
+    def sgd(self, lr):
+        for param in self.params:
+            param[:] = param - lr * param.grad

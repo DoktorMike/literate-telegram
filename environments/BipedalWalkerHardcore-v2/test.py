@@ -38,6 +38,10 @@ from mxnet import nd, autograd as ag
 import numpy as np
 
 env = gym.make("BipedalWalkerHardcore-v2")
-observation = env.reset()
 p = agent.Policy()
-p.net(nd.array(observation))
+#observation = env.reset()
+#action = p.net(nd.array(observation))
+#observation = env.step(action)
+a = agent.Agent(p, env)
+a.play(2)
+
