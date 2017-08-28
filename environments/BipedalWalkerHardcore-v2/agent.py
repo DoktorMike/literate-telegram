@@ -13,17 +13,23 @@ class Agent:
         self.reward = 0
         self.state = env.reset()
         self.done = False
+
     def print_status(self, episode, action):
         print("EPISODE ", episode, " ######")
         print("Action: ", action.asnumpy())
         print("Reward: ", self.reward)
         print("State:\n", self.state)
 
+    def sum_squared_error(self, yhat, y):
+        return nd.nansum(nd.power(y - yhat, 2), axis=0, exclude=True)
+
     def play(self, episodes):
         self.state = self.env.reset()
         for episode in range(episodes):
             self.env.render()
-            action = self.policy.decide(nd.array(self.state))
+            with autograd.record():
+                action = self.policy.decide(nd.array(self.state))
+                loss = self.sum_squared_error()
             self.state, self.reward, self.done, info = self.env.step(action.asnumpy())
             self.print_status(episode, action)
             if self.done:
