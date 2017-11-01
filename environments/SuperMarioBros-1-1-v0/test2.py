@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import cv2
 import agent
 
-mx.random.seed(2)
+mx.random.seed(1)
 
 def prep_state(state):
     #return cv2.resize(rgb2gray(observation), 128, 112), interpolation=cv2.INTER_LINEAR)
@@ -50,36 +50,36 @@ num_episodes = 20
 
 # Create main loop
 env = gym.make('SuperMarioBros-1-1-v0')
-observation = env.reset()
-observation = preprocess(observation)
-a = agent.Agent(observation.shape, env.action_space.shape)
+env.reset()
+a = agent.Agent(env.observation_space.shape, env.action_space.shape)
 for episode in range(num_episodes):
-    env.render()
-    for epoch in range(100):
+    observation, reward, done, info = env.step([0]*6)
+    observation = preprocess(observation)
+    # env.render()
+    for epoch in range(10):
         #action = env.action_space.sample() # your agent here (this takes random actions)
         with autograd.record():
-            qval1 = a.net(observation)
-            max_ind = np.argmax(qval1.asnumpy())
-            action = np.zeros(a.action_size, dtype=np.int)
-            action[max_ind]=1
-            observation, reward, done, info = env.step(action)
+            action1, max_ind1, qval1 = a.action_nd(observation)
+            observation, reward, done, info = env.step(action1)
+            if done:
+                print('Epoch {}: Resetting environment\n'.format(epoch))
+                break
             observation = preprocess(observation)
-            # action2, max_ind2, qval2 = a.action(observation)
-            tmpvar = a.action(observation)
-            action2 = tmpvar[0]
-            max_ind2 = tmpvar[1]
-            qval2 = tmpvar[2]
-            tdloss = tderror(reward, qval2, mx.nd.take(qval1, mx.nd.array([max_ind])), 0.99)
+            action2, max_ind2, qval2 = a.action(observation)
+            tdloss = tderror(reward, qval2, qval1, 0.99)
         tdloss.backward()
-        SGD(a.params, 0.01)
+        SGD(a.params, 0.1)
 
-        print('Took action {}, Received reward: {}\n'.format(action, reward))
+        print('Epoch {} Took action {}, Received reward: {}'.format(epoch, action1, reward))
         #print('Gradients: {}'.format(a.b3))
-        if done:
-            observation = env.reset()
-            observation = preprocess(observation)
-            print('Epoch {}: Resetting environment\n'.format(epoch))
-            break
+    print('Episode {} Total reward {}'.format(episode, info["total_reward"]))
+    env.close()
+    env = gym.make('SuperMarioBros-1-1-v0')
+    env.lock.acquire()
+    env.reset()
+    env.locked_levels = [False] * 32
+    env.change_level(new_level=0)
+    env.lock.release()
 
 env.close()
 

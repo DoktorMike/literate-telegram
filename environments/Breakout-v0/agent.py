@@ -3,9 +3,9 @@ from __future__ import print_function
 import mxnet as mx
 from mxnet import nd, autograd
 from mxnet import gluon
+from skimage.color import rgb2gray
 import numpy as np
 import gym
-from skimage.color import rgb2gray
 import cv2
 
 ctx = mx.cpu()
@@ -25,7 +25,7 @@ class Agent:
         self.b1 = nd.random_normal(shape=20, scale=self.weight_scale, ctx=ctx)
         self.W2 = nd.random_normal(shape=(50, 20, 5, 5), scale=self.weight_scale, ctx=ctx)
         self.b2 = nd.random_normal(shape=50, scale=self.weight_scale, ctx=ctx)
-        self.W3 = nd.random_normal(shape=(36250, self.num_fc), scale=self.weight_scale, ctx=ctx)
+        self.W3 = nd.random_normal(shape=(16200, self.num_fc), scale=self.weight_scale, ctx=ctx)
         self.b3 = nd.random_normal(shape=128, scale=self.weight_scale, ctx=ctx)
         self.W4 = nd.random_normal(shape=(self.num_fc, self.num_outputs), scale=self.weight_scale, ctx=ctx)
         self.b4 = nd.random_normal(shape=self.num_outputs, scale=self.weight_scale, ctx=ctx)
@@ -88,8 +88,11 @@ class Agent:
         q = self.net(state, debug=False)
         q = q[0].asnumpy()
         max_ind = np.argmax(q)
-        action = np.eye(self.action_size)[max_ind]
-        if (np.random.rand() < self.epsilon): action = np.random.randint(0, 2, self.action_size)
+        action = np.zeros(self.action_size, dtype=np.int)
+        if (np.random.rand() < self.epsilon):
+            #action = nd.one_hot(nd.array(np.random.randint(0,self.action_size,1)), self.action_size)
+            max_ind = np.random.randint(0, self.action_size, 1)[0]
+        action[max_ind] = 1
         #print(action)
         #print(max_ind)
         #print(q[max_ind])
@@ -99,8 +102,10 @@ class Agent:
         q = self.net(state, debug=False)
         max_ind = np.int(np.argmax(q[0].asnumpy()))
         action = np.zeros(self.action_size, dtype=np.int)
+        if (np.random.rand() < self.epsilon):
+            #action = nd.one_hot(nd.array(np.random.randint(0,self.action_size,1)), self.action_size)
+            max_ind = np.int(np.random.randint(0, self.action_size, 1)[0])
         action[max_ind] = 1
-        if (np.random.rand() < self.epsilon): action = np.random.randint(0, 2, self.action_size)
         #print(action)
         #print(max_ind)
         #print(q)

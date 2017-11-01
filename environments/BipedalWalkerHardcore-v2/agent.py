@@ -27,7 +27,7 @@ class Agent:
         self.state = self.env.reset()
         for episode in range(episodes):
             self.env.render()
-            with autograd.record():
+            with ag.record():
                 action = self.policy.decide(nd.array(self.state))
                 loss = self.sum_squared_error()
             self.state, self.reward, self.done, info = self.env.step(action.asnumpy())
