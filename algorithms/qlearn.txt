@@ -1,0 +1,10 @@
+Initialize Q(s, a), for all s ∈ S, a ∈ A(s), arbitrarily, and Q(terminal-state, ·) = 0
+Repeat (for each episode):
+  Initialize S
+
+  Repeat (for each step of episode):
+    Choose A from S using policy derived from Q (e.g., ε-greedy)
+    Take action A, observe R, Ś
+    Q(S, A) ← Q(S, A) + α[R + γ max a Q(Ś, a) − Q(S, A)]
+    S ← Ś
+  until S is terminal

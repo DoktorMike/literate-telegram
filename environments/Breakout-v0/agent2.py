@@ -22,14 +22,14 @@ class Agent:
         self.num_fc = 128
         self.num_outputs = action_size
         # Define the weights for the network
-        # 20 Filters using a 2x3x3 kernel for 3 color channels
-        self.W1 = nd.random_normal(shape=(16, 1, 2, 8, 8), scale=self.weight_scale, ctx=ctx)
-        self.b1 = nd.random_normal(shape=16, scale=self.weight_scale, ctx=ctx)
-        # 50 Filters using a 1x5x5 kernel which will take inputs from 20 Filters from before
-        self.W2 = nd.random_normal(shape=(32, 16, 1, 4, 4), scale=self.weight_scale, ctx=ctx)
-        self.b2 = nd.random_normal(shape=32, scale=self.weight_scale, ctx=ctx)
+        # 20 Filters using a 3x3 kernel for 3 color channels
+        self.W1 = nd.random_normal(shape=(20, 3, 2, 3, 3), scale=self.weight_scale, ctx=ctx)
+        self.b1 = nd.random_normal(shape=20, scale=self.weight_scale, ctx=ctx)
         # 50 Filters using a 5x5 kernel which will take inputs from 20 Filters from before
-        self.W3 = nd.random_normal(shape=(525696, self.num_fc), scale=self.weight_scale, ctx=ctx)
+        self.W2 = nd.random_normal(shape=(50, 20, 1, 5, 5), scale=self.weight_scale, ctx=ctx)
+        self.b2 = nd.random_normal(shape=50, scale=self.weight_scale, ctx=ctx)
+        # 50 Filters using a 5x5 kernel which will take inputs from 20 Filters from before
+        self.W3 = nd.random_normal(shape=(16200, self.num_fc), scale=self.weight_scale, ctx=ctx)
         self.b3 = nd.random_normal(shape=128, scale=self.weight_scale, ctx=ctx)
         self.W4 = nd.random_normal(shape=(self.num_fc, self.num_outputs), scale=self.weight_scale, ctx=ctx)
         self.b4 = nd.random_normal(shape=self.num_outputs, scale=self.weight_scale, ctx=ctx)
@@ -49,44 +49,33 @@ class Agent:
         ########################
         #  Define the computation of the first convolutional layer
         ########################
-        h1_conv = nd.Convolution(data=X, weight=self.W1, bias=self.b1, kernel=(2, 8, 8), num_filter=16)
-        if debug: print("h1 shape: %s" % (np.array(h1_conv.shape)))
+        h1_conv = nd.Convolution(data=X, weight=self.W1, bias=self.b1, kernel=(2, 3, 3), num_filter=20)
         h1_activation = self.relu(h1_conv)
-        if debug: print("h1 shape: %s" % (np.array(h1_activation.shape)))
-        #h1 = nd.Pooling(data=h1_activation, pool_type="avg", kernel=(2, 2, 2), stride=(2, 2, 2))
-        h1 = h1_activation
-        if debug: print("h1 shape: %s" % (np.array(h1.shape)))
+        h1 = nd.Pooling(data=h1_activation, pool_type="avg", kernel=(2, 2, 2), stride=(2, 2, 2))
 
         ########################
         #  Define the computation of the second convolutional layer
         ########################
-        h2_conv = nd.Convolution(data=h1, weight=self.W2, bias=self.b2, kernel=(1, 4, 4), num_filter=32)
-        if debug: print("h2 shape: %s" % (np.array(h2_conv.shape)))
+        h2_conv = nd.Convolution(data=h1, weight=self.W2, bias=self.b2, kernel=(1, 5, 5), num_filter=50)
         h2_activation = self.relu(h2_conv)
-        if debug: print("h2 shape: %s" % (np.array(h2_activation.shape)))
-        #h2 = nd.Pooling(data=h2_activation, pool_type="avg", kernel=(1, 2, 2), stride=(1, 2, 2))
-        h2 = h2_activation
-        if debug: print("h2 shape: %s" % (np.array(h2.shape)))
+        h2 = nd.Pooling(data=h2_activation, pool_type="avg", kernel=(1, 2, 2), stride=(1, 2, 2))
 
         ########################
         #  Flattening h2 so that we can feed it into a fully-connected layer
         ########################
         h2 = nd.flatten(h2)
-        if debug: print("Flat h2 shape: %s" % (np.array(h2.shape)))
 
         ########################
         #  Define the computation of the third (fully-connected) layer
         ########################
         h3_linear = nd.dot(h2, self.W3) + self.b3
         h3 = self.relu(h3_linear)
-        if debug: print("h3 shape: %s" % (np.array(h3.shape)))
 
         ########################
         #  Define the computation of the output layer
         ########################
         yhat_linear = nd.dot(h3, self.W4) + self.b4
         #yhat = self.softmax(yhat_linear)
-        if debug: print("yhat_linear shape: %s" % (np.array(yhat_linear.shape)))
 
         return yhat_linear
 
