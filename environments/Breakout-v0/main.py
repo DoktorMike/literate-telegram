@@ -25,7 +25,7 @@ for i_episode in range(100):
     observation, reward, done = helpers.get_state(env, 0)
     episode_reward=0
     while (done!=True):
-        env.render()
+        #env.render()
         #action = env.action_space.sample()
         with autograd.record():
             # Select action
